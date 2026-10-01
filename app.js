@@ -127,7 +127,8 @@ function closeOverlay(overlay) {
     if (home && overlay.parentElement !== home) home.appendChild(overlay);
   };
   const onEnd = (event) => {
-    if (event.target !== overlay || event.propertyName !== "clip-path") return;
+    if (event.target !== overlay) return;
+    if (event.propertyName !== "clip-path" && event.propertyName !== "opacity") return;
     overlay.removeEventListener("transitionend", onEnd);
     restore();
   };

@@ -178,8 +178,28 @@ h1 {
 }
 
 @media (max-width: 720px) {
+  html {
+    position: fixed;
+    top: var(--app-offset, 0px);
+    left: 0;
+    width: 100%;
+    height: var(--app-height, 100svh);
+    overflow: hidden;
+  }
+
+  body {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: none;
+  }
+
   .app {
     width: 100%;
+    height: 100%;
+    max-height: 100%;
     padding: max(12px, env(safe-area-inset-top)) 0 max(10px, env(safe-area-inset-bottom));
   }
 
@@ -210,6 +230,7 @@ h1 {
     overflow-y: hidden;
     padding: 0 12px;
     scrollbar-width: none;
+    touch-action: pan-x;
   }
 
   .event-rail::-webkit-scrollbar {
@@ -245,6 +266,11 @@ h1 {
   .event-title {
     margin-top: 10px;
     font-size: clamp(2rem, 9vw, 2.8rem);
+  }
+
+  .event-overlay,
+  .back-text {
+    touch-action: pan-y;
   }
 }
 
@@ -393,6 +419,29 @@ h1 {
   opacity: 1;
   transform: translate3d(0, 0, 0) scale(1);
   transition: opacity 0.4s ease 0.14s, transform 0.45s cubic-bezier(0.2, 0.75, 0.2, 1) 0.1s;
+}
+
+@media (max-width: 720px) {
+  .event-overlay,
+  .event-overlay.is-open {
+    clip-path: none;
+  }
+
+  .event-overlay {
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .event-overlay.is-open {
+    opacity: 1;
+  }
+
+  .event-overlay p,
+  .event-overlay.is-open p {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 .carousel {

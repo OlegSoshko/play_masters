@@ -2,7 +2,7 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Play masters." />
     <title>Play masters</title>
     <link rel="icon" href="favicon.ico" sizes="any" />
@@ -15,6 +15,25 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script>
+      (function () {
+        function syncViewportHeight() {
+          var viewport = window.visualViewport;
+          var height = viewport ? viewport.height : window.innerHeight;
+          var offset = viewport ? viewport.offsetTop : 0;
+          var root = document.documentElement;
+          root.style.setProperty("--app-height", height + "px");
+          root.style.setProperty("--app-offset", offset + "px");
+        }
+        syncViewportHeight();
+        window.addEventListener("resize", syncViewportHeight);
+        window.addEventListener("orientationchange", syncViewportHeight);
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("resize", syncViewportHeight);
+          window.visualViewport.addEventListener("scroll", syncViewportHeight);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app" class="app">
