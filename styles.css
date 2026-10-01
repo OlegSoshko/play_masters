@@ -8,6 +8,7 @@
   --shadow: 0 16px 40px rgba(70, 42, 22, 0.1);
   --serif: "Newsreader", "Iowan Old Style", Palatino, Georgia, serif;
   --sans: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+  --script: "Caveat", "Segoe Script", cursive;
 }
 
 * {
@@ -187,15 +188,29 @@ h1 {
 }
 
 .event-progress {
+  --dot: 8px;
+  --dot-gap: 8px;
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: var(--dot-gap);
   margin: 0 0 16px;
 }
 
+.dot-viewport {
+  width: calc(var(--dot) * 5 + var(--dot-gap) * 4);
+  overflow: hidden;
+}
+
+.dot-track {
+  display: flex;
+  gap: var(--dot-gap);
+  width: max-content;
+}
+
 .dot {
-  width: 8px;
-  height: 8px;
+  width: var(--dot);
+  height: var(--dot);
+  flex: none;
   margin: 0;
   padding: 0;
   border: 0;
@@ -210,11 +225,11 @@ h1 {
 
 .event-title {
   margin: 16px 0 0;
-  font-family: var(--serif);
-  font-weight: 550;
-  font-size: clamp(1.7rem, 3vw, 2.4rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-family: var(--script);
+  font-weight: 600;
+  font-size: clamp(2.4rem, 4.2vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
   text-align: center;
   color: #fffaf3;
 }

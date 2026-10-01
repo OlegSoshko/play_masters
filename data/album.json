@@ -40,6 +40,37 @@
           "файл": "photos/polina050926/11.JPG"
         }
       ]
+    },
+    {
+      "название": "Гулянки",
+      "описание": "Где мы только не были!",
+      "превью": "photos/progulki/14.jpeg",
+      "фото": [
+        {
+          "файл": "photos/progulki/4.jpeg"
+        },
+        {
+          "файл": "photos/progulki/6.jpeg"
+        },
+        {
+          "файл": "photos/progulki/7.jpeg"
+        },
+        {
+          "файл": "photos/progulki/8.jpeg"
+        },
+        {
+          "файл": "photos/progulki/9.jpeg"
+        },
+        {
+          "файл": "photos/progulki/10.jpeg"
+        },
+        {
+          "файл": "photos/progulki/11.jpeg"
+        },
+        {
+          "файл": "photos/progulki/14.jpeg"
+        }
+      ]
     }
   ]
 }

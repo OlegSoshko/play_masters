@@ -1,8 +1,16 @@
 "use strict";
 
+const MAX_DOTS = 5;
+const DOT_PAD = MAX_DOTS - 1;
+const DOT_STEP = 16;
+
 const app = document.querySelector("#app");
 let albumData = null;
 let openedIndex = null;
+let dotsSettled = null;
+let dotsToken = 0;
+let dotsTimer = 0;
+let dotsFallback = 0;
 
 init();
 
@@ -24,7 +32,11 @@ async function init() {
 function render() {
   if (openedIndex == null && albumData.events.length) openedIndex = 0;
   const opened = openedIndex == null ? null : albumData.events[openedIndex];
+  dotsToken += 1;
+  window.clearTimeout(dotsTimer);
+  window.clearTimeout(dotsFallback);
   app.innerHTML = homeView(albumData, opened);
+  dotsSettled = opened && opened.photos.length > MAX_DOTS ? initialActive(opened.photos.length) : null;
   document.title = opened ? `${opened.title} — ${albumData.title}` : albumData.title;
   const rail = app.querySelector(".event-rail");
   const selected = rail?.querySelector(".is-selected");
@@ -122,7 +134,7 @@ function eventPick(item, index) {
 function eventSection(item) {
   const active = initialActive(item.photos.length);
   const dots = item.photos.length
-    ? `<div class="event-progress">${item.photos.map((photo, index) => dotButton(photo, index, active)).join("")}</div>`
+    ? `<div class="event-progress">${progressMarkup(item.photos, active)}</div>`
     : "";
   const photos = item.photos.length
     ? `<div class="carousel" data-active="${active}">${item.photos.map((photo, index) => photoCard(photo, index, active, item.photos.length)).join("")}</div>`
@@ -147,10 +159,41 @@ function eventSection(item) {
   </section>`;
 }
 
-function dotButton(photo, index, active) {
-  const on = index === active;
+function progressMarkup(photos, active) {
+  if (photos.length > MAX_DOTS) return slidingDots(photos, active, DOT_PAD);
+  return progressDots(photos, active);
+}
+
+function progressDots(photos, active) {
+  return photos.map((photo, index) => dotButton(photo, index, index === active)).join("");
+}
+
+function slidingDots(photos, active, pad) {
+  const count = photos.length;
+  let html = "";
+  for (let offset = -pad; offset <= pad; offset += 1) {
+    const index = wrapIndex(active + offset, count);
+    html += dotButton(photos[index], index, offset === 0, offset);
+  }
+  const rest = restTranslate(pad);
+  return `<div class="dot-viewport"><div class="dot-track" data-center="${active}" data-pad="${pad}" style="transform: translateX(${rest}px)">${html}</div></div>`;
+}
+
+function restTranslate(pad) {
+  const hiddenLeft = pad - Math.floor(MAX_DOTS / 2);
+  return -hiddenLeft * DOT_STEP;
+}
+
+function wrapIndex(index, count) {
+  return (index % count + count) % count;
+}
+
+function dotButton(photo, index, on, offset) {
   const label = photo.caption || `Фото ${index + 1}`;
-  return `<button class="dot${on ? " is-active" : ""}" type="button" data-dot="${index}" aria-label="${esc(label)}"${on ? " aria-current=\"true\"" : ""}></button>`;
+  const pos = offset == null ? "" : ` data-pos="${offset}"`;
+  const shown = offset == null || Math.abs(offset) <= Math.floor(MAX_DOTS / 2);
+  const hidden = shown ? "" : ` tabindex="-1" aria-hidden="true"`;
+  return `<button class="dot${on ? " is-active" : ""}" type="button" data-dot="${index}"${pos} aria-label="${esc(label)}"${on ? " aria-current=\"true\"" : ""}${hidden}></button>`;
 }
 
 function photoCard(photo, index, active, count) {
@@ -206,8 +249,86 @@ function setActive(carousel, active) {
     photo.setAttribute("aria-pressed", "false");
     applySlot(item, Number(item.dataset.index), active, count);
   });
-  carousel.closest(".event")?.querySelectorAll("[data-dot]").forEach((dot) => {
-    const on = Number(dot.dataset.dot) === active;
+  const progress = carousel.closest(".event")?.querySelector(".event-progress");
+  const photos = albumData.events[openedIndex]?.photos;
+  if (progress && photos) shiftDots(progress, photos, active);
+}
+
+function shiftDots(progress, photos, active) {
+  const count = photos.length;
+  if (count <= MAX_DOTS) {
+    progress.innerHTML = progressDots(photos, active);
+    dotsSettled = null;
+    return;
+  }
+
+  const from = dotsSettled ?? active;
+  const delta = photoOffset(active, from, count);
+  if (delta === 0) {
+    window.clearTimeout(dotsTimer);
+    window.clearTimeout(dotsFallback);
+    dotsToken += 1;
+    progress.innerHTML = slidingDots(photos, active, DOT_PAD);
+    dotsSettled = active;
+    return;
+  }
+
+  window.clearTimeout(dotsTimer);
+  window.clearTimeout(dotsFallback);
+  const token = ++dotsToken;
+
+  const pad = Math.max(DOT_PAD, Math.abs(delta));
+  let track = progress.querySelector(".dot-track");
+  if (!track || Number(track.dataset.center) !== from || Number(track.dataset.pad) < pad) {
+    progress.innerHTML = slidingDots(photos, from, pad);
+    track = progress.querySelector(".dot-track");
+  }
+  const { step, rest } = measureTrack(track);
+  track.style.transition = "none";
+  track.style.transform = `translateX(${rest}px)`;
+  focusDot(track, delta);
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    progress.innerHTML = slidingDots(photos, active, DOT_PAD);
+    dotsSettled = active;
+    return;
+  }
+
+  const settle = () => {
+    if (token !== dotsToken) return;
+    dotsToken += 1;
+    progress.innerHTML = slidingDots(photos, active, DOT_PAD);
+    dotsSettled = active;
+  };
+
+  dotsTimer = window.setTimeout(() => {
+    if (token !== dotsToken) return;
+    track.style.transition = "none";
+    track.style.transform = `translateX(${rest}px)`;
+    void track.offsetWidth;
+    track.style.transition = "transform 320ms ease-out";
+    track.style.transform = `translateX(${rest - delta * step}px)`;
+    track.addEventListener("transitionend", (event) => {
+      if (event.propertyName !== "transform") return;
+      settle();
+    });
+    dotsFallback = window.setTimeout(settle, 420);
+  }, 160);
+}
+
+function measureTrack(track) {
+  const dot = track.querySelector(".dot");
+  const gap = Number.parseFloat(getComputedStyle(track).gap) || 0;
+  const width = dot?.getBoundingClientRect().width || DOT_STEP - gap;
+  const step = width + gap || DOT_STEP;
+  const pad = Number(track.dataset.pad);
+  const hiddenLeft = pad - Math.floor(MAX_DOTS / 2);
+  return { step, rest: -hiddenLeft * step };
+}
+
+function focusDot(track, delta) {
+  track.querySelectorAll(".dot").forEach((dot) => {
+    const on = Number(dot.dataset.pos) === delta;
     dot.classList.toggle("is-active", on);
     if (on) dot.setAttribute("aria-current", "true");
     else dot.removeAttribute("aria-current");
