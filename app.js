@@ -26,6 +26,11 @@ function render() {
   const opened = openedIndex == null ? null : albumData.events[openedIndex];
   app.innerHTML = homeView(albumData, opened);
   document.title = opened ? `${opened.title} — ${albumData.title}` : albumData.title;
+  const rail = app.querySelector(".event-rail");
+  const selected = rail?.querySelector(".is-selected");
+  if (rail && selected) {
+    rail.scrollTop = Math.max(0, selected.offsetTop - (rail.clientHeight - selected.offsetHeight) / 2);
+  }
   bindBrokenImages();
 }
 

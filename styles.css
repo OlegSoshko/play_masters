@@ -24,6 +24,7 @@ body {
     radial-gradient(ellipse 70% 55% at 12% 0%, rgba(88, 140, 220, 0.22), transparent 58%),
     radial-gradient(ellipse 55% 45% at 100% 100%, rgba(8, 18, 48, 0.55), transparent 62%);
   background-attachment: fixed;
+  overflow-x: clip;
 }
 
 button,
@@ -42,12 +43,13 @@ a {
 
 .app {
   width: min(1440px, calc(100% - 40px));
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   margin: 0 auto;
   padding: 20px 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .app > main {
@@ -79,12 +81,33 @@ h1 {
   gap: 28px;
   align-items: center;
   width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .event-rail {
+  position: relative;
+  z-index: 8;
   display: flex;
   flex-direction: column;
+  justify-content: safe center;
   gap: 12px;
+  align-self: stretch;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 250, 243, 0.4) transparent;
+}
+
+.event-rail::-webkit-scrollbar {
+  width: 6px;
+}
+
+.event-rail::-webkit-scrollbar-thumb {
+  background: rgba(255, 250, 243, 0.35);
+  border-radius: 999px;
 }
 
 .event-pick {
@@ -134,10 +157,11 @@ h1 {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  container-type: inline-size;
 }
 
 .stage .carousel {
-  --photo-w: min(calc((100dvh - 180px) * 0.68), calc((100vw - 260px) * 0.46));
+  --photo-w: min(calc((100dvh - 190px) * 0.72), calc(100cqi * 0.33));
   --gap: calc(var(--photo-w) * 0.62);
   --gap-far: calc(var(--photo-w) * 1.12);
   margin-top: 0;
@@ -150,7 +174,7 @@ h1 {
   }
 
   .stage .carousel {
-    --photo-w: min(calc((100dvh - 150px) * 0.62), calc((100vw - 110px) * 0.58));
+    --photo-w: min(calc((100dvh - 150px) * 0.62), calc(100cqi * 0.38));
     --gap: calc(var(--photo-w) * 0.5);
     --gap-far: calc(var(--photo-w) * 0.9);
   }
@@ -196,10 +220,10 @@ h1 {
 }
 
 .event-about {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 40;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 60;
   display: grid;
   width: 36px;
   height: 36px;
@@ -245,23 +269,24 @@ h1 {
 }
 
 .event-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 28px;
-  background: rgba(255, 250, 243, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  clip-path: circle(0 at calc(100% - 18px) 18px);
+  padding: 72px 28px;
+  color: #fffaf3;
+  background: rgba(8, 16, 36, 0.28);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  clip-path: circle(0 at calc(100% - 34px) 34px);
   pointer-events: none;
   transition: clip-path 0.55s cubic-bezier(0.2, 0.75, 0.2, 1);
 }
 
 .event-overlay.is-open {
-  clip-path: circle(160% at calc(100% - 18px) 18px);
+  clip-path: circle(180% at calc(100% - 34px) 34px);
   pointer-events: auto;
 }
 
@@ -316,7 +341,7 @@ h1 {
 .slot[data-offset="1"],
 .slot[data-offset="-1"] {
   --scale: 0.84;
-  --fade: 0.72;
+  --fade: 0.9;
   --layer: 4;
 }
 
@@ -331,7 +356,7 @@ h1 {
 .slot[data-offset="2"],
 .slot[data-offset="-2"] {
   --scale: 0.68;
-  --fade: 0.5;
+  --fade: 0.78;
   --layer: 3;
 }
 
@@ -351,18 +376,18 @@ h1 {
 }
 
 .slot.is-offstage[data-side="1"] {
-  --shift: calc(var(--gap-far) + 56px);
+  --shift: var(--gap-far);
 }
 
 .slot.is-offstage[data-side="-1"] {
-  --shift: calc((var(--gap-far) + 56px) * -1);
+  --shift: calc(var(--gap-far) * -1);
 }
 
 .slot[data-offset="1"]:hover,
 .slot[data-offset="-1"]:hover,
 .slot[data-offset="2"]:hover,
 .slot[data-offset="-2"]:hover {
-  --fade: 0.92;
+  --fade: 1;
 }
 
 .slot:not([data-offset="0"]) .flip-mark {
