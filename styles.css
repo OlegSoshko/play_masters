@@ -41,9 +41,21 @@ a {
 }
 
 .app {
-  width: min(1240px, calc(100% - 40px));
+  width: min(1440px, calc(100% - 40px));
+  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 36px 0 80px;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app > main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
 }
 
 .status,
@@ -65,7 +77,8 @@ h1 {
   display: grid;
   grid-template-columns: 132px minmax(0, 1fr);
   gap: 28px;
-  align-items: start;
+  align-items: center;
+  width: 100%;
 }
 
 .event-rail {
@@ -118,18 +131,28 @@ h1 {
 .event {
   position: relative;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .stage .carousel {
-  --photo-w: clamp(112px, 18vw, 230px);
-  --gap: clamp(48px, 12vw, 170px);
-  --gap-far: clamp(88px, 22vw, 320px);
+  --photo-w: min(calc((100dvh - 180px) * 0.68), calc((100vw - 260px) * 0.46));
+  --gap: calc(var(--photo-w) * 0.62);
+  --gap-far: calc(var(--photo-w) * 1.12);
+  margin-top: 0;
 }
 
 @media (max-width: 720px) {
   .stage {
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 12px;
+  }
+
+  .stage .carousel {
+    --photo-w: min(calc((100dvh - 150px) * 0.62), calc((100vw - 110px) * 0.58));
+    --gap: calc(var(--photo-w) * 0.5);
+    --gap-far: calc(var(--photo-w) * 0.9);
   }
 }
 
