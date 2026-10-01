@@ -15,17 +15,23 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
   font-family: var(--sans);
   color: var(--ink);
   background-color: var(--bg);
   background-image:
     radial-gradient(ellipse 70% 55% at 12% 0%, rgba(88, 140, 220, 0.22), transparent 58%),
     radial-gradient(ellipse 55% 45% at 100% 100%, rgba(8, 18, 48, 0.55), transparent 62%);
-  background-attachment: fixed;
-  overflow-x: clip;
 }
 
 button,
@@ -44,8 +50,7 @@ a {
 
 .app {
   width: min(1440px, calc(100% - 40px));
-  height: 100vh;
-  height: 100dvh;
+  height: 100%;
   margin: 0 auto;
   padding: 20px 0;
   display: flex;
@@ -227,8 +232,9 @@ h1 {
   }
 
   .stage .carousel {
-    --photo-w: min(calc(100cqb * 0.75), calc(100dvw - 88px));
-    --gap: clamp(16px, calc(50dvw - var(--photo-w) * 0.42), calc(var(--photo-w) * 0.72));
+    --side-pad: 12px;
+    --photo-w: min(calc(100cqb * 0.75), calc(100dvw - 88px - 2 * var(--side-pad)));
+    --gap: clamp(16px, calc(50dvw - var(--side-pad) - var(--photo-w) * 0.42), calc(var(--photo-w) * 0.72));
     --gap-far: calc(var(--gap) + var(--photo-w));
   }
 
@@ -353,20 +359,22 @@ h1 {
   justify-content: center;
   padding: 72px 28px;
   color: #fffaf3;
+  pointer-events: none;
   background: rgba(8, 16, 36, 0.28);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   clip-path: circle(0 at calc(100% - 34px) 34px);
-  pointer-events: none;
   transition: clip-path 0.55s cubic-bezier(0.2, 0.75, 0.2, 1);
 }
 
 .event-overlay.is-open {
-  clip-path: circle(180% at calc(100% - 34px) 34px);
+  clip-path: circle(150vmax at calc(100% - 34px) 34px);
   pointer-events: auto;
 }
 
 .event-overlay p {
+  position: relative;
+  z-index: 1;
   max-width: 36rem;
   margin: 0;
   font-family: var(--serif);
@@ -376,14 +384,14 @@ h1 {
   text-align: center;
   white-space: pre-wrap;
   opacity: 0;
-  transform: translate(36px, -24px) scale(0.9);
+  transform: translate3d(36px, -24px, 0) scale(0.9);
   transform-origin: top right;
   transition: opacity 0.25s ease, transform 0.3s ease;
 }
 
 .event-overlay.is-open p {
   opacity: 1;
-  transform: none;
+  transform: translate3d(0, 0, 0) scale(1);
   transition: opacity 0.4s ease 0.14s, transform 0.45s cubic-bezier(0.2, 0.75, 0.2, 1) 0.1s;
 }
 

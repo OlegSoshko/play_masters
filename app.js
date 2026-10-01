@@ -11,6 +11,7 @@ let dotsSettled = null;
 let dotsToken = 0;
 let dotsTimer = 0;
 let dotsFallback = 0;
+let overlayGuard = 0;
 
 init();
 
@@ -21,7 +22,7 @@ async function init() {
       throw new Error("Не удалось загрузить data/album.json");
     }
     albumData = normalize(await response.json());
-    app.addEventListener("click", onAppClick);
+    document.addEventListener("click", onAppClick);
     document.addEventListener("keydown", onKeyDown);
     mobileFan.addEventListener("change", refreshFan);
     render();
@@ -36,6 +37,7 @@ function render() {
   dotsToken += 1;
   window.clearTimeout(dotsTimer);
   window.clearTimeout(dotsFallback);
+  document.querySelectorAll("body > .event-overlay").forEach((node) => node.remove());
   app.innerHTML = homeView(albumData, opened);
   dotsSettled = opened && opened.photos.length > MAX_DOTS ? initialActive(opened.photos.length) : null;
   document.title = opened ? `${opened.title} — ${albumData.title}` : albumData.title;
@@ -72,14 +74,15 @@ function onAppClick(event) {
 
   const about = event.target.closest("[data-about]");
   if (about && app.contains(about)) {
-    const overlay = about.closest(".event").querySelector(".event-overlay");
+    const overlay = about.closest(".event")?.querySelector(".event-overlay") || document.querySelector("body > .event-overlay");
     if (about.getAttribute("aria-expanded") === "true") closeOverlay(overlay);
     else openOverlay(about, overlay);
     return;
   }
 
-  if (event.target.classList.contains("event-overlay")) {
-    closeOverlay(event.target);
+  const overlayHit = event.target.closest(".event-overlay");
+  if (overlayHit) {
+    if (!event.target.closest("p")) closeOverlay(overlayHit);
     return;
   }
 
@@ -99,18 +102,40 @@ function onAppClick(event) {
 
 function onKeyDown(event) {
   if (event.key !== "Escape") return;
-  app.querySelectorAll(".event-overlay.is-open").forEach(closeOverlay);
+  document.querySelectorAll(".event-overlay.is-open").forEach(closeOverlay);
 }
 
 function openOverlay(about, overlay) {
-  overlay.classList.add("is-open");
+  if (!overlay) return;
   about.setAttribute("aria-expanded", "true");
+  overlay._home = about.closest(".event");
+  overlay.classList.remove("is-open");
+  document.body.appendChild(overlay);
+  overlayGuard = performance.now();
+  void overlay.offsetWidth;
+  requestAnimationFrame(() => overlay.classList.add("is-open"));
 }
 
 function closeOverlay(overlay) {
   if (!overlay) return;
+  if (performance.now() - overlayGuard < 500) return;
   overlay.classList.remove("is-open");
-  overlay.closest(".event")?.querySelector("[data-about]")?.setAttribute("aria-expanded", "false");
+  const home = overlay._home || overlay.closest(".event");
+  home?.querySelector("[data-about]")?.setAttribute("aria-expanded", "false");
+  const restore = () => {
+    if (overlay.classList.contains("is-open")) return;
+    if (home && overlay.parentElement !== home) home.appendChild(overlay);
+  };
+  const onEnd = (event) => {
+    if (event.target !== overlay || event.propertyName !== "clip-path") return;
+    overlay.removeEventListener("transitionend", onEnd);
+    restore();
+  };
+  overlay.addEventListener("transitionend", onEnd);
+  window.setTimeout(() => {
+    overlay.removeEventListener("transitionend", onEnd);
+    restore();
+  }, 600);
 }
 
 function homeView(album, opened) {
