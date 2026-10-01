@@ -341,7 +341,8 @@ h1 {
 .slot[data-offset="1"],
 .slot[data-offset="-1"] {
   --scale: 0.84;
-  --fade: 0.9;
+  --fade: 1;
+  --veil: 0.22;
   --layer: 4;
 }
 
@@ -356,7 +357,8 @@ h1 {
 .slot[data-offset="2"],
 .slot[data-offset="-2"] {
   --scale: 0.68;
-  --fade: 0.78;
+  --fade: 1;
+  --veil: 0.5;
   --layer: 3;
 }
 
@@ -387,7 +389,7 @@ h1 {
 .slot[data-offset="-1"]:hover,
 .slot[data-offset="2"]:hover,
 .slot[data-offset="-2"]:hover {
-  --fade: 1;
+  --veil: 0.1;
 }
 
 .slot:not([data-offset="0"]) .flip-mark {
@@ -409,9 +411,21 @@ h1 {
 }
 
 .photo-scene {
+  position: relative;
   display: block;
   border-radius: 16px;
   box-shadow: var(--shadow);
+}
+
+.slot:not([data-offset="0"]):not(.is-offstage) .photo-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, var(--veil, 0.22));
+  pointer-events: none;
+  transition: background 0.35s ease;
 }
 
 .photo-card {
