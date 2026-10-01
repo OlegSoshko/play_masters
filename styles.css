@@ -161,6 +161,10 @@ h1 {
   container-type: inline-size;
 }
 
+.carousel-frame {
+  min-width: 0;
+}
+
 .stage .carousel {
   --photo-w: min(calc((100dvh - 190px) * 0.72), calc(100cqi * 0.33));
   --gap: calc(var(--photo-w) * 0.62);
@@ -169,15 +173,72 @@ h1 {
 }
 
 @media (max-width: 720px) {
+  .app {
+    width: 100%;
+    padding: max(12px, env(safe-area-inset-top)) 0 max(10px, env(safe-area-inset-bottom));
+  }
+
   .stage {
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
     gap: 12px;
+    align-items: stretch;
+  }
+
+  .event {
+    grid-row: 1;
+    grid-column: 1;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .event-rail {
+    grid-row: 2;
+    grid-column: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: safe center;
+    align-self: stretch;
+    width: 100%;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 12px;
+    scrollbar-width: none;
+  }
+
+  .event-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .event-pick {
+    width: 108px;
+    flex: none;
+  }
+
+  .carousel-frame {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+    container-type: size;
   }
 
   .stage .carousel {
-    --photo-w: min(calc((100dvh - 150px) * 0.62), calc(100cqi * 0.38));
-    --gap: calc(var(--photo-w) * 0.5);
-    --gap-far: calc(var(--photo-w) * 0.9);
+    --photo-w: min(calc(100cqb * 0.75), calc(100dvw - 88px));
+    --gap: clamp(16px, calc(50dvw - var(--photo-w) * 0.42), calc(var(--photo-w) * 0.72));
+    --gap-far: calc(var(--gap) + var(--photo-w));
+  }
+
+  .event-progress {
+    margin-bottom: 10px;
+  }
+
+  .event-title {
+    margin-top: 10px;
+    font-size: clamp(2rem, 9vw, 2.8rem);
   }
 }
 

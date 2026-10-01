@@ -23,6 +23,7 @@ async function init() {
     albumData = normalize(await response.json());
     app.addEventListener("click", onAppClick);
     document.addEventListener("keydown", onKeyDown);
+    mobileFan.addEventListener("change", refreshFan);
     render();
   } catch (error) {
     app.innerHTML = errorView(error);
@@ -40,10 +41,17 @@ function render() {
   document.title = opened ? `${opened.title} — ${albumData.title}` : albumData.title;
   const rail = app.querySelector(".event-rail");
   const selected = rail?.querySelector(".is-selected");
-  if (rail && selected) {
-    rail.scrollTop = Math.max(0, selected.offsetTop - (rail.clientHeight - selected.offsetHeight) / 2);
-  }
+  if (rail && selected) centerRail(rail, selected);
   bindBrokenImages();
+}
+
+function centerRail(rail, selected) {
+  const across = getComputedStyle(rail).flexDirection === "row";
+  if (across) {
+    rail.scrollLeft = selected.offsetLeft - (rail.clientWidth - selected.offsetWidth) / 2;
+    return;
+  }
+  rail.scrollTop = selected.offsetTop - (rail.clientHeight - selected.offsetHeight) / 2;
 }
 
 function onAppClick(event) {
@@ -137,7 +145,7 @@ function eventSection(item) {
     ? `<div class="event-progress">${progressMarkup(item.photos, active)}</div>`
     : "";
   const photos = item.photos.length
-    ? `<div class="carousel" data-active="${active}">${item.photos.map((photo, index) => photoCard(photo, index, active, item.photos.length)).join("")}</div>`
+    ? `<div class="carousel-frame"><div class="carousel" data-active="${active}">${item.photos.map((photo, index) => photoCard(photo, index, active, item.photos.length)).join("")}</div></div>`
     : `<p class="lead">В этом разделе пока нет снимков.</p>`;
   const about = item.description
     ? `<button class="event-about" type="button" data-about aria-expanded="false" aria-label="Описание мероприятия">
@@ -198,7 +206,7 @@ function dotButton(photo, index, on, offset) {
 
 function photoCard(photo, index, active, count) {
   const offset = photoOffset(index, active, count);
-  const visible = Math.abs(offset) <= 2;
+  const visible = Math.abs(offset) <= fanReach();
   const caption = photo.caption
     ? `<span class="caption">${esc(photo.caption)}</span>`
     : "";
@@ -337,7 +345,7 @@ function focusDot(track, delta) {
 
 function applySlot(slot, index, active, count) {
   const offset = photoOffset(index, active, count);
-  const visible = Math.abs(offset) <= 2;
+  const visible = Math.abs(offset) <= fanReach();
   const photo = slot.querySelector("[data-flip]");
   slot.classList.toggle("is-offstage", !visible);
   slot.dataset.offset = visible ? String(offset) : "off";
@@ -354,6 +362,23 @@ function slotLabel(offset, caption, visible) {
     return caption ? `Открыть описание: ${caption}` : "Открыть описание фотографии";
   }
   return caption ? `Показать в центре: ${caption}` : "Показать фотографию в центре";
+}
+
+const mobileFan = window.matchMedia("(max-width: 720px)");
+
+function fanReach() {
+  return mobileFan.matches ? 1 : 2;
+}
+
+function refreshFan() {
+  const carousel = app.querySelector(".carousel");
+  if (!carousel) return;
+  const active = Number(carousel.dataset.active);
+  const slots = [...carousel.querySelectorAll(".slot")];
+  slots.forEach((item) => applySlot(item, Number(item.dataset.index), active, slots.length));
+  const rail = app.querySelector(".event-rail");
+  const selected = rail?.querySelector(".is-selected");
+  if (rail && selected) centerRail(rail, selected);
 }
 
 function initialActive(count) {
