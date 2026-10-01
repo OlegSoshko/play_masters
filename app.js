@@ -12,6 +12,8 @@ let dotsToken = 0;
 let dotsTimer = 0;
 let dotsFallback = 0;
 let overlayGuard = 0;
+let swipe = null;
+let suppressClickUntil = 0;
 
 init();
 
@@ -24,6 +26,9 @@ async function init() {
     albumData = normalize(await response.json());
     document.addEventListener("click", onAppClick);
     document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchend", onTouchEnd);
+    document.addEventListener("touchcancel", onTouchCancel);
     mobileFan.addEventListener("change", refreshFan);
     render();
   } catch (error) {
@@ -57,6 +62,7 @@ function centerRail(rail, selected) {
 }
 
 function onAppClick(event) {
+  if (performance.now() < suppressClickUntil) return;
   const open = event.target.closest("[data-open]");
   if (open && app.contains(open)) {
     const next = Number(open.dataset.open);
@@ -98,6 +104,35 @@ function onAppClick(event) {
   if (selection && !selection.isCollapsed && photo.contains(selection.anchorNode)) return;
   const flipped = photo.classList.toggle("is-flipped");
   photo.setAttribute("aria-pressed", flipped ? "true" : "false");
+}
+
+function onTouchStart(event) {
+  if (!mobileFan.matches || event.touches.length !== 1) return;
+  if (document.querySelector(".event-overlay.is-open")) return;
+  const frame = event.target.closest(".carousel-frame");
+  if (!frame || !app.contains(frame)) return;
+  const touch = event.touches[0];
+  swipe = { x: touch.clientX, y: touch.clientY, frame };
+}
+
+function onTouchEnd(event) {
+  if (!swipe) return;
+  const touch = event.changedTouches[0];
+  const dx = touch.clientX - swipe.x;
+  const dy = touch.clientY - swipe.y;
+  const frame = swipe.frame;
+  swipe = null;
+  if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+  const carousel = frame.querySelector(".carousel");
+  const count = carousel?.querySelectorAll(".slot").length ?? 0;
+  if (count < 2) return;
+  suppressClickUntil = performance.now() + 400;
+  const active = (Number(carousel.dataset.active) + (dx < 0 ? 1 : -1) + count) % count;
+  setActive(carousel, active);
+}
+
+function onTouchCancel() {
+  swipe = null;
 }
 
 function onKeyDown(event) {

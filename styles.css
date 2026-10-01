@@ -250,6 +250,7 @@ h1 {
     width: 100%;
     min-height: 0;
     container-type: size;
+    touch-action: pan-y;
   }
 
   .stage .carousel {
